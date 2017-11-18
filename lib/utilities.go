@@ -21,54 +21,6 @@ var (
 	h hash.Hash
 )
 
-type criteriaFn func(triple Triple, key string) bool
-
-func objectMask(criteria criteriaFn, object Query) Pattern {
-	p := Pattern{}
-	log.Fatal()
-	// 	valid := false
-	// loop:
-	// 	for k, v := range object {
-	// 		for _, x := range defs["spo"] {
-	// 			if k == x {
-	// 				break loop
-	// 			}
-	// 		}
-
-	// 		if criteria(object, k) {
-	// 			break
-	// 		}
-
-	// 	}
-	// 	//     return lodashKeys(object).
-	// 	// 	filter(a).
-	// 	// 	filter(function(key) {
-	// 	// 	  return criteria(object, key);
-	// 	// 	}).
-	// 	// 	reduce(function(acc, key) {
-	// 	// 	  acc[key] = object[key];
-	// 	// 	  return acc;
-	// 	// 	},
-	// 	//   {});
-	return p
-}
-
-func queryMask(query Query) Pattern {
-	fn := func(t Triple, key string) bool {
-		log.Fatal(`return typeof triple[key] !== 'object';`)
-		return false
-	}
-	return objectMask(fn, query)
-}
-
-func variablesMask(query Query) Pattern {
-	fn := func(t Triple, key string) bool {
-		log.Fatal(`return triple[key] instanceof Variable;`)
-		return false
-	}
-	return objectMask(fn, query)
-}
-
 func genKeys(t Triple) [][]byte {
 	keys := make([][]byte, 0, len(defs))
 
@@ -138,32 +90,32 @@ type Query struct {
 	stream streamType
 }
 
-func createQuery(pattern Pattern, options streamOptions) Query {
-	types := typesFromPattern(pattern)
+func createQuery(qp QueryPattern, options streamOptions) Query {
+	types := typesFromPattern(qp)
 	preferiteIndex := options.Index
 	index := findIndex(types, preferiteIndex)
-	key := genKey(index, pattern.Triple)
+	key := genKey(index, qp.Triple)
 
 	query := Query{
 		Prefix: key,
-		Limit:  pattern.Limit,
+		Limit:  qp.Limit,
 	}
 
 	return query
 }
 
-func typesFromPattern(pattern Pattern) []string {
+func typesFromPattern(qp QueryPattern) []string {
 	results := make([]string, 0, 3)
 
-	if len(pattern.Triple.Subject) > 0 {
+	if len(qp.Triple.Subject) > 0 {
 		results = append(results, "subject")
 	}
 
-	if len(pattern.Triple.Predicate) > 0 {
+	if len(qp.Triple.Predicate) > 0 {
 		results = append(results, "predicate")
 	}
 
-	if len(pattern.Triple.Object) > 0 {
+	if len(qp.Triple.Object) > 0 {
 		results = append(results, "object")
 	}
 

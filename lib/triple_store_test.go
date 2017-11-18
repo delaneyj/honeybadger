@@ -9,7 +9,7 @@ import (
 
 func TestTripleStore(t *testing.T) {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	Convey("with a new DB", t, func() {
+	SkipConvey("with a new DB", t, func() {
 		db, err := New("")
 		So(err, ShouldBeNil)
 

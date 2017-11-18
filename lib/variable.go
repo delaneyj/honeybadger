@@ -1,33 +1,33 @@
 package honeybadger
 
-// Solution x
-type Solution map[string]string
+// Solutions x
+type Solutions map[string]string
 
 //Variable x
 type Variable struct {
 	Name string
 }
 
-func (v *Variable) bind(solution Solution, value string) Solution {
+func (v *Variable) bind(solutions Solutions, value string) Solutions {
 
-	if !v.isBindable(solution, value) {
+	if !v.isBindable(solutions, value) {
 		return nil
 	}
 
-	newSolution := Solution{}
-	for k, v := range solution {
-		newSolution[k] = v
+	newSolutions := Solutions{}
+	for k, v := range solutions {
+		newSolutions[k] = v
 	}
-	newSolution[v.Name] = value
-	return newSolution
+	newSolutions[v.Name] = value
+	return newSolutions
 }
 
-func (v *Variable) isBound(solution Solution) bool {
-	_, ok := solution[v.Name]
+func (v *Variable) isBound(solutions Solutions) bool {
+	_, ok := solutions[v.Name]
 	return ok
 }
 
-func (v *Variable) isBindable(solution Solution, value string) bool {
-	currentValue, ok := solution[v.Name]
+func (v *Variable) isBindable(solutions Solutions, value string) bool {
+	currentValue, ok := solutions[v.Name]
 	return !ok || currentValue == value
 }

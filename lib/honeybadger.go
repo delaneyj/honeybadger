@@ -21,6 +21,13 @@ type Triple struct {
 	Object    []byte
 }
 
+//TripleVariables x
+type TripleVariables struct {
+	Subject   *Variable
+	Predicate *Variable
+	Object    *Variable
+}
+
 //HoneyBadger x
 type HoneyBadger struct {
 	db *badger.DB
@@ -176,8 +183,8 @@ func delete(tx *badger.Txn, t Triple) error {
 }
 
 //Count x
-func (hb *HoneyBadger) Count(pattern Pattern) (uint, uint) {
-	query := createQuery(pattern, streamOptions{})
+func (hb *HoneyBadger) Count(qp QueryPattern) (uint, uint) {
+	query := createQuery(qp, streamOptions{})
 	opts := badger.DefaultIteratorOptions
 	opts.PrefetchValues = false
 
@@ -186,12 +193,12 @@ func (hb *HoneyBadger) Count(pattern Pattern) (uint, uint) {
 	err := hb.db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(opts)
 		for it.Seek(query.Prefix); it.ValidForPrefix(query.Prefix); it.Next() {
-			if offset < pattern.Offset {
+			if offset < qp.Offset {
 				offset++
 				continue
 			}
 
-			if pattern.Limit != 0 && counted >= pattern.Limit {
+			if qp.Limit != 0 && counted >= qp.Limit {
 				break
 			}
 
@@ -210,13 +217,14 @@ func (hb *HoneyBadger) Count(pattern Pattern) (uint, uint) {
 	return rdfCount, indexBytes
 }
 
-//Pattern x
-type Pattern struct {
-	Limit   uint
-	Offset  uint
-	Triple  Triple
-	Reverse bool
-	Filter  func(t Triple) bool
+//QueryPattern x
+type QueryPattern struct {
+	Limit     uint
+	Offset    uint
+	Triple    Triple
+	Variables TripleVariables
+	Reverse   bool
+	Filter    func(t Triple) bool
 }
 
 type streamOptions struct {
@@ -224,25 +232,25 @@ type streamOptions struct {
 }
 
 //Search x
-func (hb *HoneyBadger) Search(pattern Pattern) []Triple {
+func (hb *HoneyBadger) Search(qp QueryPattern) []Triple {
 	triples := []Triple{}
-	for t := range hb.SearchCh(pattern) {
+	for t := range hb.SearchCh(qp) {
 		triples = append(triples, t)
 	}
 	return triples
 }
 
 //SearchCh x
-func (hb *HoneyBadger) SearchCh(pattern Pattern) chan Triple {
+func (hb *HoneyBadger) SearchCh(qp QueryPattern) chan Triple {
 	tripleseCh := make(chan Triple)
 
 	go func() {
-		query := createQuery(pattern, streamOptions{})
+		query := createQuery(qp, streamOptions{})
 		startingPrefix := query.Prefix
 
 		err := hb.db.View(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
-			opts.Reverse = pattern.Reverse
+			opts.Reverse = qp.Reverse
 
 			if opts.Reverse {
 				startingPrefix = append(query.Prefix, 0xff)
@@ -252,12 +260,12 @@ func (hb *HoneyBadger) SearchCh(pattern Pattern) chan Triple {
 			it := txn.NewIterator(opts)
 
 			for it.Seek(startingPrefix); it.ValidForPrefix(query.Prefix); it.Next() {
-				if offset < pattern.Offset {
+				if offset < qp.Offset {
 					offset++
 					continue
 				}
 
-				if pattern.Limit != 0 && sent >= pattern.Limit {
+				if qp.Limit != 0 && sent >= qp.Limit {
 					break
 				}
 
@@ -279,8 +287,8 @@ func (hb *HoneyBadger) SearchCh(pattern Pattern) chan Triple {
 					return errors.Wrap(err, "can't unmarshal triple")
 				}
 
-				if pattern.Filter != nil {
-					shouldKeep := pattern.Filter(triple)
+				if qp.Filter != nil {
+					shouldKeep := qp.Filter(triple)
 					if !shouldKeep {
 						continue
 					}
@@ -322,9 +330,14 @@ var (
 )
 
 //VariableQuery x
-func (hb *HoneyBadger) VariableQuery(query Query, options VariableQueryOptions) {
-	planner := NewQueryPlanner(hb, options)
+func (hb *HoneyBadger) VariableQuery(options VariableQueryOptions, queryPatterns ...QueryPattern) (Solutions, error) {
+	planner, err := NewQueryPlanner(hb, options)
+	if err != nil {
+		return nil, errors.Wrap(err, "can't init query planner")
+	}
 	// result := NewPassthrough()
 	// result.ObjectMode = true
 	log.Fatal(planner)
+
+	return Solutions{}, nil
 }

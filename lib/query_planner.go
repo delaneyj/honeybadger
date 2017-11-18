@@ -3,43 +3,66 @@ package honeybadger
 import (
 	"log"
 	"sort"
+
+	"github.com/pkg/errors"
 )
 
-//QueryPlanner  x
-type QueryPlanner []Query
-
 //NewQueryPlanner x
-func NewQueryPlanner(hb *HoneyBadger, options VariableQueryOptions, queries ...Query) QueryPlanner {
-	results := queries //dupes?
+func NewQueryPlanner(hb *HoneyBadger, options VariableQueryOptions, queryPatterns ...QueryPattern) ([]QueryPattern, error) {
+	results := queryPatterns //dupes?
 
-	queriesSizes := make([]uint, len(queries))
-	for i, q := range queries {
-		newQ := queryMask(q)
-		// rang := createQuery(newQ, streamOptions{})
-
-		rdfCount, _ := hb.Count(newQ)
+	queriesSizes := make([]uint, len(queryPatterns))
+	for i, qp := range queryPatterns {
+		err := checkPatternForCollisions(qp)
+		if err != nil {
+			return nil, errors.Wrapf(err, "pattern collision in %+v", qp)
+		}
+		rdfCount, _ := hb.Count(qp)
 		queriesSizes[i] = rdfCount
 
 		log.Fatal("not implemented")
 	}
 
-	sort.Slice(queries, func(i, j int) bool {
+	sort.Slice(queryPatterns, func(i, j int) bool {
 		return queriesSizes[i] < queriesSizes[j]
 	})
 
 	if options.Algorithm == Sort && len(results) > 1 {
-		var sum *Query
+		var sum *QueryPattern
 
-		for _, q := range results {
-			sum = doSortQueryPlan(sum, &q)
+		for _, qp := range results {
+			sum = doSortQueryPlan(sum, &qp)
 		}
 	}
 
-	return results
+	return results, nil
 }
 
-func doSortQueryPlan(first, second *Query) *Query {
-	if first == nil || first.stream == joinStream {
+func checkPatternForCollisions(qp QueryPattern) error {
+	s := qp.Triple.Subject
+	p := qp.Triple.Predicate
+	o := qp.Triple.Object
+	sV := qp.Variables.Subject
+	pV := qp.Variables.Predicate
+	oV := qp.Variables.Object
+
+	if s != nil && len(s) > 0 && sV != nil {
+		return errors.New("uses both subject and bound variable")
+	}
+
+	if p != nil && len(p) > 0 && pV != nil {
+		return errors.New("uses both predicate and bound variable")
+	}
+
+	if o != nil && len(o) > 0 && oV != nil {
+		return errors.New("Pattern uses both object and bound variable")
+	}
+
+	return nil
+}
+func doSortQueryPlan(first, second *QueryPattern) *QueryPattern {
+	// if first == nil || first.stream == joinStream {
+	if first == nil {
 		return nil
 	}
 
