@@ -80,7 +80,7 @@ func genKey(key string, triple Triple) []byte {
 type streamType int
 
 const (
-	joinStream streamType = iota
+	streamTypeJoin streamType = iota
 )
 
 //Query x
@@ -179,4 +179,78 @@ func possibleIndexes(types []string) []string {
 	})
 
 	return results
+}
+
+type maskUpdaterFn func(Solutions, []string) Solutions
+
+func maskUpdater(qp QueryPattern) maskUpdaterFn {
+	variables := variablesMask(qp)
+
+	return func(solutions Solutions, mask []string) Solutions {
+		newMask := Solutions{}
+
+		for _, v := range variables {
+			if v.isBound(solutions) {
+				newMask[v.Name] = solutions[v.Name]
+			}
+
+			log.Fatal("Solutions have filters?")
+			// newMask.Filter = qp.Filter
+		}
+
+		return newMask
+		// 	return Object.keys(variables).reduce(function(newMask, key) {
+		// 	var variable = variables[key];
+		// 	if (variable.isBound(solution)) {
+		// 	  newMask[key] = solution[variable.name];
+		// 	}
+		// 	newMask.filter = pattern.filter;
+		// 	return newMask;
+		//   }, Object.keys(mask).reduce(function(acc, key) {
+		// 	acc[key] = mask[key];
+		// 	return acc;
+		//   }, {}));
+	}
+}
+
+func variablesMask(qp QueryPattern) map[string]Variable {
+	variables := map[string]Variable{}
+	s := qp.Variables.Subject
+	p := qp.Variables.Predicate
+	o := qp.Variables.Object
+
+	if s != nil {
+		variables["subject"] = *s
+	}
+	if p != nil {
+		variables["predicate"] = *p
+	}
+	if o != nil {
+		variables["object"] = *o
+	}
+	return variables
+}
+
+type matcherFn func(Solutions, Triple)
+
+func matcher(qp QueryPattern) matcherFn {
+	queryVariables := variablesMask(qp)
+
+	//Real matcher?
+	return func(solutions Solutions, triple Triple) {
+		for key, v := range queryVariables {
+			var value []byte
+			switch key {
+			case "subject":
+				value = triple.Subject
+			case "predicate":
+				value = triple.Predicate
+			case "object":
+				value = triple.Object
+			default:
+				log.Fatal("on noes")
+			}
+			v.bind(solutions, value)
+		}
+	}
 }
