@@ -337,7 +337,7 @@ func (hb *HoneyBadger) VariableQuery(options VariableQueryOptions, queryPatterns
 	}
 	// result := NewPassthrough()
 	// result.ObjectMode = true
-	log.Fatal(planner)
+	log.Println("Not implemented", planner)
 
 	return Solutions{}, nil
 }

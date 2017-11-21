@@ -181,12 +181,12 @@ func possibleIndexes(types []string) []string {
 	return results
 }
 
-type maskUpdaterFn func(Solutions, []string) Solutions
+type maskUpdaterFn func(solution Solutions, mask Solutions) Solutions
 
 func maskUpdater(qp QueryPattern) maskUpdaterFn {
 	variables := variablesMask(qp)
 
-	return func(solutions Solutions, mask []string) Solutions {
+	return func(solutions, mask Solutions) Solutions {
 		newMask := Solutions{}
 
 		for _, v := range variables {
@@ -199,18 +199,25 @@ func maskUpdater(qp QueryPattern) maskUpdaterFn {
 		}
 
 		return newMask
-		// 	return Object.keys(variables).reduce(function(newMask, key) {
-		// 	var variable = variables[key];
-		// 	if (variable.isBound(solution)) {
-		// 	  newMask[key] = solution[variable.name];
-		// 	}
-		// 	newMask.filter = pattern.filter;
-		// 	return newMask;
-		//   }, Object.keys(mask).reduce(function(acc, key) {
-		// 	acc[key] = mask[key];
-		// 	return acc;
-		//   }, {}));
 	}
+}
+
+func queryMask(qp QueryPattern) map[string][]byte {
+	results := map[string][]byte{}
+
+	if qp.Triple.Subject != nil && len(qp.Triple.Subject) > 0 {
+		results["subject"] = qp.Triple.Subject
+	}
+
+	if qp.Triple.Predicate != nil && len(qp.Triple.Predicate) > 0 {
+		results["predicate"] = qp.Triple.Predicate
+	}
+
+	if qp.Triple.Object != nil && len(qp.Triple.Object) > 0 {
+		results["object"] = qp.Triple.Object
+	}
+
+	return results
 }
 
 func variablesMask(qp QueryPattern) map[string]Variable {
