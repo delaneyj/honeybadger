@@ -46,16 +46,16 @@ db.put(
         predicate: "friend",
         object: db.v("x")
       },
-      // {
-      //   subject: db.v("x"),
-      //   predicate: "friend",
-      //   object: db.v("y")
-      // },
-      // {
-      //   subject: db.v("y"),
-      //   predicate: "friend",
-      //   object: "davide"
-      // }
+      {
+        subject: db.v("x"),
+        predicate: "friend",
+        object: db.v("y")
+      },
+      {
+        subject: db.v("y"),
+        predicate: "friend",
+        object: "davide"
+      }
     ]);
 
     stream.on("data", function(data) {

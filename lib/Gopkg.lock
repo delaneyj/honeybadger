@@ -2,34 +2,16 @@
 
 
 [[projects]]
-  branch = "master"
-  name = "github.com/AndreasBriese/bbloom"
+  name = "github.com/boltdb/bolt"
   packages = ["."]
-  revision = "28f7e881ca57bc00e028f9ede9f0d9104cfeef5e"
+  revision = "2f1ce7a837dcb8da3ec595b1dac9d0632f0f99e8"
+  version = "v1.3.1"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/aead/siphash"
+  name = "github.com/dchest/siphash"
   packages = ["."]
-  revision = "e404fcfc888570cadd1610538e2dbc89f66af814"
-
-[[projects]]
-  name = "github.com/dgraph-io/badger"
-  packages = [".","options","protos","skl","table","y"]
-  revision = "c7225883aa76fb3dd4707923c67c64bc1b4631bc"
-  version = "v1.1.0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/dgryski/go-farm"
-  packages = ["."]
-  revision = "b4d3a9839087b496f1a78747197ced08a8e069c0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/golang/protobuf"
-  packages = ["proto"]
-  revision = "1e59b77b52bf8e4b449a57e6f79f21226d571845"
+  revision = "42ba037e748c9062a75e0924705c43b893edefcd"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -69,19 +51,13 @@
 
 [[projects]]
   branch = "master"
-  name = "golang.org/x/net"
-  packages = ["context","internal/timeseries","trace"]
-  revision = "9dfe39835686865bff950a07b394c12a98ddc811"
-
-[[projects]]
-  branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "bf42f188b9bc6f2cf5b8ee5a912ef1aedd0eba4c"
+  revision = "328643532ee3c60c099171d4ce2cad0ca0354ca9"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3b96e1846c27f193be63148b67270b750afd43a962d6be4a802142a597c434bb"
+  inputs-digest = "9ddd200bb7be30cf1e203b45dc0e582e848b28e6ba157b727372c62e5fbb47e9"
   solver-name = "gps-cdcl"
   solver-version = 1
