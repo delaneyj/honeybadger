@@ -13,8 +13,6 @@ import (
 func TestTripleStoreUnicode(t *testing.T) {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	t.Parallel()
-
 	SkipConvey("a basic unicode triple store", t, func() {
 		db, err := New("")
 		So(err, ShouldBeNil)
@@ -23,7 +21,7 @@ func TestTripleStoreUnicode(t *testing.T) {
 			db.Close()
 		})
 
-		p := Pattern{}
+		qp := QueryPattern{}
 
 		kanjiCar := []byte("车")
 		kanjiYes := []byte("是")
@@ -44,64 +42,64 @@ func TestTripleStoreUnicode(t *testing.T) {
 			db.Put(triple)
 
 			Convey("should get it specifiying the subject", func() {
-				p.Triple.Subject = square
-				So(db.Search(p), ShouldContain, triple)
+				qp.Triple.Subject = square
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should get it specifiying the object", func() {
-				p.Triple.Object = railwayEmoji
-				So(db.Search(p), ShouldContain, triple)
+				qp.Triple.Object = railwayEmoji
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should get it specifiying the predicate", func() {
-				p.Triple.Predicate = alchemicalAirSymbol
-				So(db.Search(p), ShouldContain, triple)
+				qp.Triple.Predicate = alchemicalAirSymbol
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should get it specifiying the subject and the predicate", func() {
-				p.Triple.Subject = square
-				p.Triple.Predicate = alchemicalAirSymbol
-				So(db.Search(p), ShouldContain, triple)
+				qp.Triple.Subject = square
+				qp.Triple.Predicate = alchemicalAirSymbol
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should get it specifiying the subject and the object", func() {
-				p.Triple.Subject = square
-				p.Triple.Object = railwayEmoji
-				So(db.Search(p), ShouldContain, triple)
+				qp.Triple.Subject = square
+				qp.Triple.Object = railwayEmoji
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should get it specifiying the predicate and the object", func() {
-				p.Triple.Predicate = alchemicalAirSymbol
-				p.Triple.Object = railwayEmoji
-				So(db.Search(p), ShouldContain, triple)
+				qp.Triple.Predicate = alchemicalAirSymbol
+				qp.Triple.Object = railwayEmoji
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should return the triple through the SearchCh interface", func() {
-				p.Triple.Predicate = alchemicalAirSymbol
-				result := <-db.SearchCh(p)
+				qp.Triple.Predicate = alchemicalAirSymbol
+				result := <-db.SearchCh(qp)
 				So(result, ShouldResemble, triple)
 			})
 
 			Convey("should get the triple if limit 1 is used", func() {
-				p.Limit = 1
-				So(db.Search(p), ShouldContain, triple)
+				qp.Limit = 1
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should get the triple if limit 0 is used", func() {
-				p.Limit = 0
-				So(db.Search(p), ShouldContain, triple)
+				qp.Limit = 0
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should get the triple if offset 0 is used", func() {
-				p.Offset = 0
-				r := db.Search(p)
+				qp.Offset = 0
+				r := db.Search(qp)
 				So(r, ShouldHaveLength, 1)
 				So(r, ShouldContain, triple)
 			})
 
 			Convey("should not get the triple if offset 1 is used", func() {
-				p.Offset = 1
-				r := db.Search(p)
+				qp.Offset = 1
+				r := db.Search(qp)
 				So(r, ShouldHaveLength, 0)
 				So(r, ShouldNotContain, triple)
 			})
@@ -116,8 +114,8 @@ func TestTripleStoreUnicode(t *testing.T) {
 			Convey("should get only triples with exact match of subjects", func() {
 				db.Put(Triple{kanjiAircarft, kanjiYes, kanjiTransportation})
 
-				p.Triple.Subject = kanjiCar
-				results := db.Search(p)
+				qp.Triple.Subject = kanjiCar
+				results := db.Search(qp)
 				So(results, ShouldHaveLength, 2)
 				So(results, ShouldContain, t1)
 				So(results, ShouldContain, t2)
@@ -130,15 +128,15 @@ func TestTripleStoreUnicode(t *testing.T) {
 			db.Put(t1, t2)
 
 			Convey("should get one by specifiying the subject", func() {
-				p.Triple.Subject = kanjiAircarft
-				r := db.Search(p)
+				qp.Triple.Subject = kanjiAircarft
+				r := db.Search(qp)
 				So(r, ShouldHaveLength, 1)
 				So(r, ShouldContain, t1)
 			})
 
-			p.Triple.Predicate = kanjiYes
+			qp.Triple.Predicate = kanjiYes
 			Convey("should get two by specifiying the predicate", func() {
-				r := db.Search(p)
+				r := db.Search(qp)
 				So(r, ShouldHaveLength, 2)
 				So(r, ShouldContain, t1)
 				So(r, ShouldContain, t2)
@@ -146,83 +144,83 @@ func TestTripleStoreUnicode(t *testing.T) {
 
 			Convey("should remove one and still return the other", func() {
 				db.Delete(t2)
-				r := db.Search(p)
+				r := db.Search(qp)
 				So(r, ShouldHaveLength, 1)
 				So(r, ShouldContain, t1)
 				So(r, ShouldNotContain, t2)
 			})
 
 			Convey("should return both triples through the getStream interface", func() {
-				ch := db.SearchCh(p)
+				ch := db.SearchCh(qp)
 				So(t1, ShouldResemble, <-ch)
 				So(t2, ShouldResemble, <-ch)
 			})
 
 			Convey("should return only one triple with limit 1", func() {
-				p.Limit = 1
-				r := db.Search(p)
+				qp.Limit = 1
+				r := db.Search(qp)
 				So(r, ShouldHaveLength, 1)
 				So(r, ShouldContain, t1)
 			})
 
 			Convey("should return two triples with limit 2", func() {
-				p.Limit = 2
-				r := db.Search(p)
+				qp.Limit = 2
+				r := db.Search(qp)
 				So(r, ShouldHaveLength, 2)
 				So(r, ShouldContain, t1)
 				So(r, ShouldContain, t2)
 			})
 
 			Convey("should return 2 triples with limit 3", func() {
-				p.Limit = 3
-				r := db.Search(p)
+				qp.Limit = 3
+				r := db.Search(qp)
 				So(r, ShouldHaveLength, 2)
 				So(r, ShouldContain, t1)
 				So(r, ShouldContain, t2)
 			})
 
 			Convey("should support limit over streams", func() {
-				p.Limit = 1
-				So(t1, ShouldResemble, <-db.SearchCh(p))
+				qp.Limit = 1
+				So(t1, ShouldResemble, <-db.SearchCh(qp))
 			})
 
 			Convey("should return only one triple with offset 1", func() {
-				p.Offset = 1
-				r := db.Search(p)
+				qp.Offset = 1
+				r := db.Search(qp)
 				So(r, ShouldHaveLength, 1)
 				So(r, ShouldContain, t2)
 			})
 
 			Convey("should return only no triples with offset 2", func() {
-				p.Offset = 2
-				r := db.Search(p)
+				qp.Offset = 2
+				r := db.Search(qp)
 				So(r, ShouldBeEmpty)
 			})
 
 			Convey("should support offset over streams", func() {
-				p.Offset = 1
-				So(t2, ShouldResemble, <-db.SearchCh(p))
+				qp.Offset = 1
+				So(t2, ShouldResemble, <-db.SearchCh(qp))
 			})
 
 			Convey("should return the triples in reverse order with reverse true", func() {
-				p.Reverse = true
-				r := db.Search(p)
+				qp.Reverse = true
+				r := db.Search(qp)
 				So(r, ShouldHaveLength, 2)
 				So(r[0], ShouldResemble, t2)
 				So(r[1], ShouldResemble, t1)
 			})
 
 			Convey("should return the last triple with reverse true and limit 1", func() {
-				p.Reverse = true
-				p.Limit = 1
-				r := db.Search(p)
+				qp.Reverse = true
+				qp.Limit = 1
+				r := db.Search(qp)
 				So(r, ShouldHaveLength, 1)
 				So(r[0], ShouldResemble, t2)
 			})
 
 			Convey("should support reverse over streams", func() {
-				p.Reverse = true
-				ch := db.SearchCh(p)
+				qp.Reverse = true
+				ch := db.SearchCh(qp)
 				So(<-ch, ShouldResemble, t2)
 				So(<-ch, ShouldResemble, t1)
 			})
@@ -248,8 +246,8 @@ func TestTripleStoreUnicode(t *testing.T) {
 			db.Put(triples...)
 
 			Convey("should return the approximate size", func() {
-				p.Triple.Predicate = kanjiDerived
-				rdfCount, indexBytes := db.Count(p)
+				qp.Triple.Predicate = kanjiDerived
+				rdfCount, indexBytes := db.Count(qp)
 				So(rdfCount, ShouldEqual, count)
 				So(indexBytes, ShouldAlmostEqual, 3060)
 			})
@@ -265,20 +263,20 @@ func TestTripleStoreUnicode(t *testing.T) {
 			close(ch)
 			<-done
 
-			p.Triple.Predicate = kanjiYes
+			qp.Triple.Predicate = kanjiYes
 
 			Convey("should store the triples written using a stream", func() {
-				r := db.Search(p)
+				r := db.Search(qp)
 				So(r, ShouldHaveLength, 2)
 				So(r[0], ShouldResemble, t1)
 				So(r[1], ShouldResemble, t2)
 			})
 
 			Convey("should support filtering", func() {
-				p.Filter = func(t Triple) bool {
+				qp.Filter = func(t Triple) bool {
 					return bytes.Compare(t.Object, kanjiTransportation) == 0
 				}
-				r := db.Search(p)
+				r := db.Search(qp)
 				So(r, ShouldHaveLength, 1)
 				So(r, ShouldContain, t1)
 			})
@@ -291,7 +289,7 @@ func TestTripleStoreUnicode(t *testing.T) {
 				close(ch)
 				<-done
 
-				r := db.Search(p)
+				r := db.Search(qp)
 				So(r, ShouldBeEmpty)
 			})
 		})

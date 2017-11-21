@@ -17,25 +17,40 @@ func TestQueryPlanner(t *testing.T) {
 			db.Close()
 		})
 
+		matteo := []byte("matteo")
+		daniele := []byte("daniele")
+		lucio := []byte("lucio")
+		marco := []byte("marco")
+		davide := []byte("davide")
+		friend := []byte("friend")
+
 		Convey("add friends", func() {
 			db.Put(
-				Triple{[]byte("matteo"), []byte("friend"), []byte("daniele")},
-				Triple{[]byte("daniele"), []byte("friend"), []byte("matteo")},
-				Triple{[]byte("daniele"), []byte("friend"), []byte("marco")},
-				Triple{[]byte("lucio"), []byte("friend"), []byte("matteo")},
-				Triple{[]byte("lucio"), []byte("friend"), []byte("marco")},
-				Triple{[]byte("marco"), []byte("friend"), []byte("davide")},
+				Triple{matteo, friend, daniele},
+				Triple{daniele, friend, matteo},
+				Triple{daniele, friend, marco},
+				Triple{lucio, friend, matteo},
+				Triple{lucio, friend, marco},
+				Triple{marco, friend, davide},
 			)
 
-			p := Pattern{
+			qp := QueryPattern{
 				Triple: Triple{
 					Subject: []byte("matteo"),
 				},
-				SubjectV: &Variable{"x"},
+				Variables: TripleVariables{
+					Subject: &Variable{"x"},
+				},
 			}
 
-			r := db.VariableQuery(DefaultVariableQueryOptions, p)
-			log.Println(r)
+			r, err := db.VariableQuery(DefaultVariableQueryOptions, qp)
+			So(err, ShouldBeNil)
+
+			So(r, ShouldHaveLength, 1)
+
+			f, ok := r["x"]
+			So(ok, ShouldBeTrue)
+			So(f, ShouldEqual, daniele)
 		})
 	})
 }
