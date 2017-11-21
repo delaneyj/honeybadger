@@ -21,7 +21,7 @@ func TestTripleStore(t *testing.T) {
 		b := []byte("b")
 		c := []byte("c")
 		d := []byte("d")
-		p := Pattern{}
+		qp := QueryPattern{}
 
 		Convey("with a triple inserted", func() {
 			triple := Triple{
@@ -33,60 +33,60 @@ func TestTripleStore(t *testing.T) {
 			db.Put(triple)
 
 			Convey("should get it specifiying the subject", func() {
-				p.Triple = Triple{Subject: a}
-				So(db.Search(p), ShouldContain, triple)
+				qp.Triple = Triple{Subject: a}
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should get it specifiying the object", func() {
-				p.Triple = Triple{Object: c}
-				So(db.Search(p), ShouldContain, triple)
+				qp.Triple = Triple{Object: c}
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should get it specifiying the predicate", func() {
-				p.Triple = Triple{Predicate: b}
-				So(db.Search(p), ShouldContain, triple)
+				qp.Triple = Triple{Predicate: b}
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should get it specifiying the subject and the predicate", func() {
-				p.Triple = Triple{Subject: a, Predicate: b}
-				So(db.Search(p), ShouldContain, triple)
+				qp.Triple = Triple{Subject: a, Predicate: b}
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should get it specifiying the subject and the object", func() {
-				p.Triple = Triple{Subject: a, Object: c}
-				So(db.Search(p), ShouldContain, triple)
+				qp.Triple = Triple{Subject: a, Object: c}
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should get it specifiying the predicate and the object", func() {
-				p.Triple = Triple{Predicate: b, Object: c}
-				So(db.Search(p), ShouldContain, triple)
+				qp.Triple = Triple{Predicate: b, Object: c}
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should return the triple through the getStream interface", func() {
-				p.Triple = Triple{Predicate: b}
-				for t := range db.SearchCh(p) {
+				qp.Triple = Triple{Predicate: b}
+				for t := range db.SearchCh(qp) {
 					So(t, ShouldResemble, triple)
 				}
 			})
 
 			Convey("should get the triple if limit 1 is used", func() {
-				p.Limit = 1
-				So(db.Search(p), ShouldContain, triple)
+				qp.Limit = 1
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should get the triple if limit 0 is used", func() {
-				p.Limit = 0
-				So(db.Search(p), ShouldContain, triple)
+				qp.Limit = 0
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should get the triple if offset 0 is used", func() {
-				p.Offset = 0
-				So(db.Search(p), ShouldContain, triple)
+				qp.Offset = 0
+				So(db.Search(qp), ShouldContain, triple)
 			})
 
 			Convey("should not get the triple if offset 1 is used", func() {
-				p.Offset = 1
-				So(db.Search(p), ShouldNotContain, triple)
+				qp.Offset = 1
+				So(db.Search(qp), ShouldNotContain, triple)
 			})
 		})
 
@@ -101,8 +101,8 @@ func TestTripleStore(t *testing.T) {
 			t2 := Triple{a, b, d}
 			db.Put(t1, t2)
 
-			p.Triple = Triple{Subject: a}
-			results := db.Search(p)
+			qp.Triple = Triple{Subject: a}
+			results := db.Search(qp)
 			So(results, ShouldHaveLength, 1)
 			So(results[0], ShouldResemble, t2)
 		})
@@ -113,8 +113,8 @@ func TestTripleStore(t *testing.T) {
 				t2 := Triple{Subject: []byte("a::a::a"), Predicate: b, Object: c}
 				db.Put(t1, t2)
 
-				p.Triple = Triple{Subject: a}
-				So(db.Search(p), ShouldHaveLength, 1)
+				qp.Triple = Triple{Subject: a}
+				So(db.Search(qp), ShouldHaveLength, 1)
 			})
 
 			Convey("should support string contain \\::", func() {
@@ -122,8 +122,8 @@ func TestTripleStore(t *testing.T) {
 				t2 := Triple{Subject: []byte("a\\::a"), Predicate: b, Object: c}
 				db.Put(t1, t2)
 
-				p.Triple = Triple{Subject: a}
-				So(db.Search(p), ShouldHaveLength, 1)
+				qp.Triple = Triple{Subject: a}
+				So(db.Search(qp), ShouldHaveLength, 1)
 			})
 			Convey("should support string end with :", func() {
 				aColon := []byte("a:")
@@ -131,8 +131,8 @@ func TestTripleStore(t *testing.T) {
 				t2 := Triple{Subject: aColon, Predicate: b, Object: c}
 				db.Put(t1, t2)
 
-				p.Triple = Triple{Subject: aColon}
-				result := db.Search(p)
+				qp.Triple = Triple{Subject: aColon}
+				result := db.Search(qp)
 				So(result, ShouldHaveLength, 1)
 				So(result[0].Subject, ShouldResemble, aColon)
 			})
@@ -143,8 +143,8 @@ func TestTripleStore(t *testing.T) {
 				t2 := Triple{Subject: aBackslash, Predicate: b, Object: c}
 				db.Put(t1, t2)
 
-				p.Triple = Triple{Subject: aBackslash}
-				res := db.Search(p)
+				qp.Triple = Triple{Subject: aBackslash}
+				res := db.Search(qp)
 				So(res, ShouldHaveLength, 1)
 				So(res[0].Subject, ShouldResemble, aBackslash)
 			})
@@ -155,8 +155,8 @@ func TestTripleStore(t *testing.T) {
 			t := Triple{Subject: a, Predicate: b, Object: f}
 			db.Put(t)
 
-			p.Triple = t
-			results := db.Search(p)
+			qp.Triple = t
+			results := db.Search(qp)
 			log.Printf("%+v", results)
 			So(results, ShouldHaveLength, 1)
 		})
