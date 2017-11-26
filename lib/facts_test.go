@@ -30,4 +30,5 @@ func TestFacts(t *testing.T) {
 		}
 
 		So(f.generateIndexKeys(), ShouldResemble, keys)
+	})
 }
